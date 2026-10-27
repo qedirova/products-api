@@ -1,10 +1,21 @@
 import express from "express";
 import { products } from "./db/products.js";
+import { logger } from "./middlewares/logger.js";
+import { authMiddleware } from "./middlewares/authMiddleware.js";
 
 const app = express();
 const PORT = 8000;
-app.use(express.json());
 
+// middlewares
+app.use(express.json());
+app.use(logger);
+
+// public route
+app.get("/", (req, res) => {
+  res.send("Hello world from Banu Products API! 🚀");
+});
+
+// public route
 app.get("/products", (req, res) => {
   const limit = Number(req.query.limit);
 
@@ -15,6 +26,7 @@ app.get("/products", (req, res) => {
   }
 });
 
+// public route
 app.get("/products/:id", (req, res) => {
   const id = Number(req.params.id);
 
@@ -28,7 +40,8 @@ app.get("/products/:id", (req, res) => {
   return res.json(product);
 });
 
-app.post("/products/create", (req, res) => {
+// protected route
+app.post("/products/create", authMiddleware, (req, res) => {
   const { name, price, category } = req.body;
   if (!name || !price || !category) {
     return res.status(400).json({
@@ -51,7 +64,9 @@ app.post("/products/create", (req, res) => {
   });
 });
 
-app.patch("/products/:id", (req, res) => {
+// protected route
+
+app.patch("/products/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
 
   const product = products.find((p) => p.id === id);
@@ -70,7 +85,8 @@ app.patch("/products/:id", (req, res) => {
   });
 });
 
-app.delete("/products/:id", (req, res) => {
+// protected route
+app.delete("/products/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
 
   const index = products.findIndex((p) => p.id === id);
@@ -88,6 +104,8 @@ app.delete("/products/:id", (req, res) => {
     product: deleted[0],
   });
 });
+
+// app.method(url, ...middlewares)
 
 app.listen(PORT, () => {
   console.log("Server is running");
