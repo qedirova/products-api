@@ -24,3 +24,24 @@ export const products = [
     category: "clothes",
   },
 ];
+
+export const comments = [
+  {
+    id: 1,
+    text: "Great product!",
+    author: "Banu",
+    productId: 1,
+  },
+  {
+    id: 2,
+    text: "Very good quality",
+    author: "Ali",
+    productId: 2,
+  },
+  {
+    id: 3,
+    text: "I like it!",
+    author: "Aysel",
+    productId: 1,
+  },
+];
