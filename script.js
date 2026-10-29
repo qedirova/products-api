@@ -1,7 +1,7 @@
 import express from "express";
-import { products } from "./db/products.js";
 import { logger } from "./middlewares/logger.js";
-import { authMiddleware } from "./middlewares/authMiddleware.js";
+import { productsRouter } from "./routes/products.router.js";
+import { commentsRouter } from "./comments.router.js";
 
 const app = express();
 const PORT = 8000;
@@ -10,210 +10,14 @@ const PORT = 8000;
 app.use(express.json());
 app.use(logger);
 
-// public route
+// routes
+app.use("/products", productsRouter);
+
 app.get("/", (req, res) => {
   res.send("Hello world from Banu Products API! 🚀");
 });
 
-// public route
-app.get("/products", (req, res) => {
-  const limit = Number(req.query.limit);
-
-  if (limit > 0 && !isNaN(limit)) {
-    return res.json(products.slice(0, limit));
-  } else {
-    return res.json(products);
-  }
-});
-
-// public route
-app.get("/products/:id", (req, res) => {
-  const id = Number(req.params.id);
-
-  const product = products.find((product) => product.id === id);
-
-  if (!product)
-    return res.status(404).json({
-      error: "Product not found",
-    });
-
-  return res.json(product);
-});
-
-// protected route
-app.post("/products/create", authMiddleware, (req, res) => {
-  const { name, price, category } = req.body;
-  if (!name || !price || !category) {
-    return res.status(400).json({
-      error: "All fields are required",
-    });
-  }
-
-  const newProduct = {
-    id: products.length + 1,
-    name,
-    price,
-    category,
-  };
-
-  products.push(newProduct);
-
-  return res.status(201).json({
-    message: "Product successfully created",
-    product: newProduct,
-  });
-});
-
-// protected route
-
-app.patch("/products/:id", authMiddleware, (req, res) => {
-  const id = Number(req.params.id);
-
-  const product = products.find((p) => p.id === id);
-
-  if (!product) {
-    return res.status(404).json({
-      error: "Product not found",
-    });
-  }
-
-  Object.assign(product, req.body);
-
-  return res.status(200).json({
-    message: "Product was successfully updated",
-    product,
-  });
-});
-
-// protected route
-app.delete("/products/:id", authMiddleware, (req, res) => {
-  const id = Number(req.params.id);
-
-  const index = products.findIndex((p) => p.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({
-      error: "Product not found",
-    });
-  }
-
-  const deleted = products.splice(index, 1);
-
-  return res.json({
-    message: "Product was successfully deleted",
-    product: deleted[0],
-  });
-});
-
 // app.method(url, ...middlewares)
-
-app.get("/comments", (req, res) => {
-  const limit = Number(req.query.limit);
-
-  if (limit > 0 && !isNaN(limit)) {
-    return res.json(comments.slice(0, limit));
-  }
-
-  return res.json(comments);
-});
-
-app.get("/comments/:id", (req, res) => {
-  const id = Number(req.params.id);
-
-  const comment = comments.find((c) => c.id === id);
-
-  if (!comment) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
-  }
-
-  return res.json(comment);
-});
-
-app.post("/comments/create", authMiddleware, (req, res) => {
-  const { text, author, productId } = req.body;
-
-  if (
-    typeof text !== "string" ||
-    !text.trim() ||
-    typeof author !== "string" ||
-    !author.trim() ||
-    !Number.isInteger(productId) ||
-    productId <= 0
-  ) {
-    return res.status(400).json({
-      error: "Valid text, author and productId are required",
-    });
-  }
-
-  const newComment = {
-    id: comments.length ? Math.max(...comments.map((c) => c.id)) + 1 : 1,
-    text: text.trim(),
-    author: author.trim(),
-    productId,
-  };
-
-  comments.push(newComment);
-
-  return res.status(201).json({
-    message: "Comment successfully created",
-    comment: newComment,
-  });
-});
-
-app.patch("/comments/:id", authMiddleware, (req, res) => {
-  const id = Number(req.params.id);
-
-  const comment = comments.find((c) => c.id === id);
-
-  if (!comment) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
-  }
-
-  const { text, author, productId } = req.body;
-
-  if (
-    (text !== undefined && (typeof text !== "string" || !text.trim())) ||
-    (author !== undefined && (typeof author !== "string" || !author.trim())) ||
-    (productId !== undefined &&
-      (!Number.isInteger(productId) || productId <= 0))
-  ) {
-    return res.status(400).json({
-      error: "Invalid comment data",
-    });
-  }
-
-  if (text !== undefined) comment.text = text.trim();
-  if (author !== undefined) comment.author = author.trim();
-  if (productId !== undefined) comment.productId = productId;
-
-  return res.status(200).json({
-    message: "Comment successfully updated",
-    comment,
-  });
-});
-
-app.delete("/comments/:id", authMiddleware, (req, res) => {
-  const id = Number(req.params.id);
-
-  const index = comments.findIndex((c) => c.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
-  }
-
-  const deleted = comments.splice(index, 1);
-
-  return res.json({
-    message: "Comment successfully deleted",
-    comment: deleted[0],
-  });
-});
 
 app.listen(PORT, () => {
   console.log("Server is running");
