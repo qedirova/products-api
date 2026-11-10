@@ -1,4 +1,5 @@
 import { products } from "../db/products.js";
+import { AppError } from "../utils/appError.js";
 
 export const getAllProducts = (req, res) => {
   const limit = Number(req.query.limit);
@@ -15,10 +16,7 @@ export const getProductById = (req, res) => {
 
   const product = products.find((product) => product.id === id);
 
-  if (!product)
-    return res.status(404).json({
-      error: "Product not found",
-    });
+  if (!product) throw new AppError("Product not found", 404);
 
   return res.json(product);
 };
@@ -26,9 +24,7 @@ export const getProductById = (req, res) => {
 export const createProduct = (req, res) => {
   const { name, price, category } = req.body;
   if (!name || !price || !category) {
-    return res.status(400).json({
-      error: "All fields are required",
-    });
+    throw new AppError("All fields are required", 400);
   }
 
   const newProduct = {
@@ -52,14 +48,12 @@ export const updateProduct = (req, res) => {
   const product = products.find((p) => p.id === id);
 
   if (!product) {
-    return res.status(404).json({
-      error: "Product not found",
-    });
+    throw new AppError("Product not found", 404);
   }
 
   Object.assign(product, req.body);
 
-  return res.status(200).json({
+  return res.json({
     message: "Product was successfully updated",
     product,
   });
@@ -71,9 +65,7 @@ export const deleteProduct = (req, res) => {
   const index = products.findIndex((p) => p.id === id);
 
   if (index === -1) {
-    return res.status(404).json({
-      error: "Product not found",
-    });
+    throw new AppError("Product not found", 404);
   }
 
   const deleted = products.splice(index, 1);

@@ -1,4 +1,5 @@
 import { comments } from "../db/products.js";
+import { AppError } from "../utils/appError.js";
 
 export const getAllComments = (req, res) => {
   const limit = Number(req.query.limit);
@@ -16,9 +17,7 @@ export const getCommentById = (req, res) => {
   const comment = comments.find((c) => c.id === id);
 
   if (!comment) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
+    throw new AppError("Comment not found", 404);
   }
 
   return res.json(comment);
@@ -35,9 +34,7 @@ export const createComment = (req, res) => {
     !Number.isInteger(productId) ||
     productId <= 0
   ) {
-    return res.status(400).json({
-      error: "Valid text, author and productId are required",
-    });
+    throw new AppError("Valid text, author and productId are required", 400);
   }
 
   const newComment = {
@@ -61,9 +58,7 @@ export const updateComment = (req, res) => {
   const comment = comments.find((c) => c.id === id);
 
   if (!comment) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
+    throw new AppError("Comment not found", 404);
   }
 
   const { text, author, productId } = req.body;
@@ -74,9 +69,7 @@ export const updateComment = (req, res) => {
     (productId !== undefined &&
       (!Number.isInteger(productId) || productId <= 0))
   ) {
-    return res.status(400).json({
-      error: "Invalid comment data",
-    });
+    throw new AppError("Invalid comment data", 400);
   }
 
   if (text !== undefined) comment.text = text.trim();
@@ -95,9 +88,7 @@ export const deleteComment = (req, res) => {
   const index = comments.findIndex((c) => c.id === id);
 
   if (index === -1) {
-    return res.status(404).json({
-      error: "Comment not found",
-    });
+    throw new AppError("Comment not found", 404);
   }
 
   const deleted = comments.splice(index, 1);
